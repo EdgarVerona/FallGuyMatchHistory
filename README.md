@@ -3,6 +3,8 @@ Simple Fall Guy match history analysis from logs.  Based on https://github.com/S
 
 Trying to whip up something to do a best effort tracking of who gets eliminated and when in each Fall Guys game in which the user participates.
 
+![image](https://user-images.githubusercontent.com/620343/160304651-9535cdb3-baa7-4f32-96a6-1deecabb803d.png)
+
 ## Where is the important stuff?
 
 ### Projects
