@@ -44,19 +44,23 @@ namespace FallGuyMatchHistory.Engine
         private List<LogLine> _lines = new List<LogLine>();
         private bool _running;
         private bool _stop;
+        private bool _started;
         private Thread _watcher, _parser;
+        private HistorySettings _settings;
 
         public event Action<DateTime> OnNewLogFileDate;
         public event Action<string> OnError;
         public event Action<GamePhase, Show> OnShowUpdate;
         public event Action<GamePhase, Show, ShowRound> OnRoundUpdate;
 
-        public void Start(string logDirectory, string fileName)
+        public void Start(HistorySettings settings, string fileName)
         {
             if (_running) { return; }
 
-            _filePath = Path.Combine(logDirectory, fileName);
-            _prevFilePath = Path.Combine(logDirectory, Path.GetFileNameWithoutExtension(fileName) + "-prev.log");
+            _started = true;
+            _settings = settings;
+            _filePath = Path.Combine(settings.LogPath, fileName);
+            _prevFilePath = Path.Combine(settings.LogPath, Path.GetFileNameWithoutExtension(fileName) + "-prev.log");
             _stop = false;
             _watcher = new Thread(ReadLogFile) { IsBackground = true };
             _watcher.Start();
@@ -66,14 +70,18 @@ namespace FallGuyMatchHistory.Engine
 
         public async Task Stop()
         {
-            _stop = true;
-            while (_running || _watcher == null || _watcher.ThreadState == ThreadState.Unstarted)
+            if (_started)
             {
-                await Task.Delay(50);
+                _started = false;
+                _stop = true;
+                while (_running || _watcher == null || _watcher.ThreadState == ThreadState.Unstarted)
+                {
+                    await Task.Delay(50);
+                }
+                _lines = new List<LogLine>();
+                await Task.Factory.StartNew(() => _watcher?.Join());
+                await Task.Factory.StartNew(() => _parser?.Join());
             }
-            _lines = new List<LogLine>();
-            await Task.Factory.StartNew(() => _watcher?.Join());
-            await Task.Factory.StartNew(() => _parser?.Join());
         }
 
         private void ReadLogFile()
@@ -162,7 +170,7 @@ namespace FallGuyMatchHistory.Engine
 
         private void ParseLines()
         {
-            LogParsingContext context = new LogParsingContext();
+            LogParsingContext context = new LogParsingContext(_settings);
 			context.Error += Context_Error;
 			context.ShowUpdate += Context_ShowUpdate;
 			context.RoundUpdate += Context_RoundUpdate;

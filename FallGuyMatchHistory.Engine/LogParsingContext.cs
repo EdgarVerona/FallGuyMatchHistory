@@ -20,6 +20,13 @@ namespace FallGuyMatchHistory.Engine
 
 		private GamePhase _currentPhase = GamePhase.NotInShow;
 
+		private HistorySettings _settings;
+
+		public LogParsingContext(HistorySettings settings)
+		{
+			_settings = settings;
+		}
+
 		public void SetGamePhase(GamePhase newPhase, DateTime date)
 		{
 			switch (newPhase)
@@ -73,7 +80,7 @@ namespace FallGuyMatchHistory.Engine
 		{
 			if (_currentPhase != GamePhase.RoundLoaded)
 			{
-				Error?.Invoke($"ERROR: Player [{playerIdForRound}/{platformType}/{gamertag}] found spawn data, but not in RoundLoaded phase!");
+				ThrowError($"ERROR: Player [{playerIdForRound}/{platformType}/{gamertag}] found spawn data, but not in RoundLoaded phase!");
 			}
 
 			if (_currentRound != null)
@@ -90,6 +97,12 @@ namespace FallGuyMatchHistory.Engine
 				roundPlayer.Gamertag = gamertag;
 				roundPlayer.PlatformType = platformType;
 			}
+		}
+
+		private void ThrowError(string error)
+		{
+			_currentShow.Errors.Add(error);
+			Error?.Invoke(error);
 		}
 
 		public void UpdatePlayerShowIdentifier(
@@ -114,7 +127,7 @@ namespace FallGuyMatchHistory.Engine
 		{
 			if (_currentPhase != GamePhase.RoundStarted)
 			{
-				Error?.Invoke($"ERROR: Player [{playerIdForRound}] found Status Data, but not in RoundStarted phase!");
+				ThrowError($"ERROR: Player [{playerIdForRound}] found Status Data, but not in RoundStarted phase!");
 			}
 
 			if (_currentRound != null)
@@ -148,7 +161,7 @@ namespace FallGuyMatchHistory.Engine
 		{
 			if (_currentPhase != GamePhase.RoundEnded)
 			{
-				Error?.Invoke($"ERROR: Player [{playerIdForRound}] won the match, but we're not in RoundEnded phase!");
+				ThrowError($"ERROR: Player [{playerIdForRound}] won the match, but we're not in RoundEnded phase!");
 			}
 
 			// By this point, the final round should have been computed, and everyone other than the winner should have been either implicitly
@@ -179,7 +192,7 @@ namespace FallGuyMatchHistory.Engine
 					{
 						// To account for when many people get eliminated at the same time or client uncertainty,
 						// consider two players to have the same rank if within a certain tolerance.
-						if (Math.Abs(loserRank.ResultTime.Subtract(lastRankTime).TotalMilliseconds) >= MILLISECOND_SAME_FRAME_THRESHOLD)
+						if (Math.Abs(loserRank.ResultTime.Subtract(lastRankTime).TotalMilliseconds) >= _settings.MillisecondSameFrameThreshold)
 						{
 							currentRank++;
 							// If this loser wasn't within the threshold of the first streak of losers we saw in this time range, then

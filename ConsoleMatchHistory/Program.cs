@@ -2,6 +2,7 @@
 using FallGuyMatchHistory.Engine;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,7 +19,13 @@ namespace ConsoleMatchHistory
 			watcher.OnRoundUpdate += Watcher_OnRoundUpdate;
 			watcher.OnShowUpdate += Watcher_OnShowUpdate;
 
-			watcher.Start(@"C:\Users\Edgar\AppData\LocalLow\Mediatonic\FallGuys_client", "Player.log");
+			HistorySettings settings = new HistorySettings()
+			{
+				LogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "Low", "Mediatonic", "FallGuys_client"),
+				MillisecondSameFrameThreshold = 100
+			};
+
+			watcher.Start(settings, "Player.log");
 
 			while (true)
 			{

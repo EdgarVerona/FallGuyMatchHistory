@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace FallGuyMatchHistory.Contracts
 {
@@ -16,6 +17,11 @@ namespace FallGuyMatchHistory.Contracts
 		public DateTime EndTime { get; set; }
 
 		public List<ShowRound> Rounds { get; set; }
+
+		public List<string> Errors { get; set; }
+
+		[JsonIgnore]
+		public string Description => $"{this.Rounds.Count} Rounds, {this.PlayerRanks.Count} Players";
 
 		public Show()
 		{
@@ -34,9 +40,9 @@ namespace FallGuyMatchHistory.Contracts
 
 		public string PlatformType { get; set; }
 
-		public DateTime ResultTime { get; set; }
-
 		public int RoundEliminated { get; set; }
+
+		public DateTime ResultTime { get; set; }
 	}
 
 	public enum OutcomeReason
